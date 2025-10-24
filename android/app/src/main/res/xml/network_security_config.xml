@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- UAT Environment: Allow cleartext HTTP traffic (port 3032) -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- API server for UAT environment -->
+        <domain includeSubdomains="true">13.126.34.62</domain>
+        <!-- Add localhost for testing -->
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+    </domain-config>
+    
+    <!-- Production Environment: HTTPS only (port 3030) -->
+    <!-- The server IP 13.126.34.62 will use HTTPS on port 3030 for production -->
+    <!-- No additional config needed as HTTPS is allowed by default -->
+    
+    <!-- Base configuration for all other domains -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
+
