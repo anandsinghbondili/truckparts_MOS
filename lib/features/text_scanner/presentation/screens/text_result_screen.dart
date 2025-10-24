@@ -161,194 +161,211 @@ class _TextResultScreenState extends State<TextResultScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Scanned Parts',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            // Use GoRouter's pop to go back to previous screen
-            // This will return to the TextScannerHomeScreen with data intact
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              // Fallback: navigate to home if no previous route
-              context.go('/text-scanner');
-            }
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.copy),
-            onPressed: () => _copyToClipboard(context),
-            tooltip: 'Copy Text',
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (didPop) {
+        if (didPop) {
+          // Navigation was successful, do nothing
+          return;
+        }
+        // If pop was prevented, handle it manually
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/text-scanner');
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Scanned Parts',
+            style: TextStyle(color: Colors.white),
           ),
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () => _shareText(context),
-            tooltip: 'Share Text',
+          backgroundColor: Theme.of(context).primaryColor,
+          foregroundColor: Colors.white,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () {
+              // Use GoRouter's pop to go back to previous screen
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                // Fallback: navigate to text scanner if no previous route
+                context.go('/text-scanner');
+              }
+            },
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image preview if available (reduced size)
-            if (widget.recognizedText.imagePath != null)
-              Container(
-                height: 120,
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.outline.withOpacity(0.3),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.copy),
+              onPressed: () => _copyToClipboard(context),
+              tooltip: 'Copy Text',
+            ),
+            IconButton(
+              icon: const Icon(Icons.share),
+              onPressed: () => _shareText(context),
+              tooltip: 'Share Text',
+            ),
+          ],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Image preview if available (reduced size)
+              if (widget.recognizedText.imagePath != null)
+                Container(
+                  height: 120,
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outline.withOpacity(0.3),
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      'assets/logos/truckparts_logo.png', // Placeholder
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Theme.of(context).colorScheme.surface,
+                          child: Icon(
+                            Icons.image,
+                            size: 48,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.5),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
-                child: ClipRRect(
+
+              // Match Pills Section with Categorized Organization
+              if (_matches.isNotEmpty) ...[
+                Text(
+                  'Detected Parts',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Parts Found Section (Exact Matches)
+                if (_getMatchesByType(MatchType.exact).isNotEmpty) ...[
+                  _buildMatchSection(
+                    context,
+                    'Parts Found',
+                    _getMatchesByType(MatchType.exact),
+                    Icons.check_circle,
+                    const Color(0xFF10B981), // Green
+                    'Tap to view this part',
+                  ),
+                  const SizedBox(height: 20),
+                ],
+
+                // Possible Matches Section (Partial Matches)
+                if (_getMatchesByType(MatchType.partial).isNotEmpty) ...[
+                  _buildMatchSection(
+                    context,
+                    'Possible Matches',
+                    _getMatchesByType(MatchType.partial),
+                    Icons.warning_amber,
+                    const Color(0xFFFACC15), // Orange
+                    'Tap to search for this part',
+                  ),
+                  const SizedBox(height: 20),
+                ],
+
+                // Not Recognized Section (No Matches)
+                if (_getMatchesByType(MatchType.none).isNotEmpty) ...[
+                  _buildMatchSection(
+                    context,
+                    'Not Recognized',
+                    _getMatchesByType(MatchType.none),
+                    Icons.cancel,
+                    const Color(0xFFEF4444), // Red
+                    'Not in database',
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ],
+
+              // Scanned Text Display
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    'assets/logos/truckparts_logo.png', // Placeholder
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Theme.of(context).colorScheme.surface,
-                        child: Icon(
-                          Icons.image,
-                          size: 48,
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: Theme.of(context).colorScheme.surface,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
                           color: Theme.of(
                             context,
-                          ).colorScheme.onSurface.withOpacity(0.5),
+                          ).primaryColor.withOpacity(0.1),
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(12),
+                            topRight: Radius.circular(12),
+                          ),
                         ),
-                      );
-                    },
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.text_fields,
+                              color: Theme.of(context).primaryColor,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Scanned Text',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Content
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: SelectableText(
+                          widget.recognizedText.text,
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                fontSize: 16,
+                                height: 1.6,
+                                fontWeight: FontWeight.w400,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
 
-            // Match Pills Section with Categorized Organization
-            if (_matches.isNotEmpty) ...[
-              Text(
-                'Detected Parts',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 16),
-
-              // Parts Found Section (Exact Matches)
-              if (_getMatchesByType(MatchType.exact).isNotEmpty) ...[
-                _buildMatchSection(
-                  context,
-                  'Parts Found',
-                  _getMatchesByType(MatchType.exact),
-                  Icons.check_circle,
-                  const Color(0xFF10B981), // Green
-                  'Tap to view this part',
-                ),
-                const SizedBox(height: 20),
-              ],
-
-              // Possible Matches Section (Partial Matches)
-              if (_getMatchesByType(MatchType.partial).isNotEmpty) ...[
-                _buildMatchSection(
-                  context,
-                  'Possible Matches',
-                  _getMatchesByType(MatchType.partial),
-                  Icons.warning_amber,
-                  const Color(0xFFFACC15), // Orange
-                  'Tap to search for this part',
-                ),
-                const SizedBox(height: 20),
-              ],
-
-              // Not Recognized Section (No Matches)
-              if (_getMatchesByType(MatchType.none).isNotEmpty) ...[
-                _buildMatchSection(
-                  context,
-                  'Not Recognized',
-                  _getMatchesByType(MatchType.none),
-                  Icons.cancel,
-                  const Color(0xFFEF4444), // Red
-                  'Not in database',
-                ),
-                const SizedBox(height: 20),
-              ],
+              // Add bottom padding to prevent overflow
+              const SizedBox(height: 20),
             ],
-
-            // Scanned Text Display
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(12),
-                          topRight: Radius.circular(12),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.text_fields,
-                            color: Theme.of(context).primaryColor,
-                            size: 24,
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Scanned Text',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Content
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: SelectableText(
-                        widget.recognizedText.text,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontSize: 16,
-                          height: 1.6,
-                          fontWeight: FontWeight.w400,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Add bottom padding to prevent overflow
-            const SizedBox(height: 20),
-          ],
+          ),
         ),
       ),
     );

@@ -29,5 +29,6 @@ class AppConstants {
 
   // App Info
   static const String appName = 'Truck Parts - MOS';
-  static const String appVersion = '1.0.0';
+  // Note: App version is now dynamically retrieved from PackageInfo
+  // static const String appVersion = '1.0.0'; // Removed hardcoded version
 }

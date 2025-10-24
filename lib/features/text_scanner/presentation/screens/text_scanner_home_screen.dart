@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:get_it/get_it.dart';
 import '../bloc/text_scanner_bloc.dart';
 import '../bloc/text_scanner_event.dart';
 import '../bloc/text_scanner_state.dart';
 import '../widgets/loading_overlay.dart';
 import '../../../home/presentation/widgets/home_drawer.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../home/data/services/item_details_by_customer_service.dart';
+import '../../../home/data/services/parts_data_service.dart';
 
 class TextScannerHomeScreen extends StatelessWidget {
   const TextScannerHomeScreen({super.key});
@@ -31,11 +34,20 @@ class TextScannerHomeScreen extends StatelessWidget {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            iconSize: 24,
-            onPressed: () => _refreshParts(context),
-            tooltip: 'Refresh Parts Database',
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: IconButton(
+              onPressed: () => _refreshParts(context),
+              icon: const Icon(Icons.refresh, size: 24),
+              tooltip: 'Refresh Parts Database',
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.white.withOpacity(0.2),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -104,43 +116,126 @@ class TextScannerHomeScreen extends StatelessWidget {
     );
   }
 
-  void _refreshParts(BuildContext context) {
-    // Show loading indicator
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => const AlertDialog(
-        content: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 16),
-            Text('Refreshing parts database...'),
-          ],
-        ),
-      ),
-    );
-
-    // Simulate refresh delay and show success message
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.of(context).pop(); // Close loading dialog
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
+  Future<void> _refreshParts(BuildContext context) async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => const AlertDialog(
+          content: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 8),
-              Text('Parts database refreshed successfully'),
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text('Refreshing parts database...'),
             ],
           ),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          duration: const Duration(seconds: 3),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       );
-    });
+
+      // Get services from GetIt
+      final itemDetailsService = GetIt.instance<ItemDetailsByCustomerService>();
+      final partsDataService = GetIt.instance<PartsDataService>();
+
+      print('');
+      print(
+        '╔════════════════════════════════════════════════════════════════╗',
+      );
+      print(
+        '║  🔄 TEXT SCANNER: Refreshing Parts from API                     ║',
+      );
+      print(
+        '╚════════════════════════════════════════════════════════════════╝',
+      );
+
+      final refreshStartTime = DateTime.now();
+      print('🔄 REFRESH STARTED at: ${refreshStartTime.toIso8601String()}');
+      print('');
+
+      final apiStartTime = DateTime.now();
+      print('🌐 Calling ItemDetailsbyCustomer API...');
+
+      final items = await itemDetailsService.getItemsByCustomer();
+
+      final apiEndTime = DateTime.now();
+      final apiDuration = apiEndTime.difference(apiStartTime);
+      print('📥 API Response received in ${apiDuration.inMilliseconds}ms');
+
+      if (items.isNotEmpty) {
+        partsDataService.storeParts(items);
+        print('✅ Stored ${items.length} items in PartsDataService');
+      }
+
+      final refreshEndTime = DateTime.now();
+      final totalDuration = refreshEndTime.difference(refreshStartTime);
+
+      print('');
+      print('=' * 70);
+      print('✅ REFRESH COMPLETED SUCCESSFULLY!');
+      print('   - Total items: ${items.length}');
+      print(
+        '   - API call time: ${apiDuration.inMilliseconds}ms (${(apiDuration.inMilliseconds / 1000).toStringAsFixed(2)}s)',
+      );
+      print(
+        '   - Total refresh time: ${totalDuration.inMilliseconds}ms (${(totalDuration.inMilliseconds / 1000).toStringAsFixed(2)}s)',
+      );
+      print('=' * 70);
+      print('✅ REFRESH ENDED at: ${refreshEndTime.toIso8601String()}');
+      print('');
+
+      // Close loading dialog
+      Navigator.of(context).pop();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Text('Refreshed ${items.length} parts from API'),
+              ],
+            ),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      Navigator.of(context).pop();
+
+      print('');
+      print('=' * 70);
+      print('❌ REFRESH FAILED: $e');
+      print('=' * 70);
+      print('');
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Text('Failed to refresh parts: ${e.toString()}'),
+              ],
+            ),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
+    }
   }
 }
 
