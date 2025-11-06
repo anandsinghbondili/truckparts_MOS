@@ -36,7 +36,7 @@ class TextMatchService {
     final matches = <TextMatch>[];
     final searchTerms = _extractSearchTerms(extractedText);
 
-    // Find exact matches against itemname field
+    // Find exact and partial matches against itemname field
     for (final term in searchTerms) {
       if (term.length < 2) continue; // Skip very short terms
 
@@ -46,13 +46,21 @@ class TextMatchService {
         // Add all exact matches for this term
         matches.addAll(exactMatches);
       } else {
-        // No match found for this term
-        matches.add(TextMatch(
-          text: term,
-          matchType: MatchType.none,
-          matchedPart: null,
-          confidence: 0.0,
-        ));
+        // Try to find partial matches
+        final partialMatches = _findPartialMatches(term, _cachedPartsData!);
+        
+        if (partialMatches.isNotEmpty) {
+          // Add partial matches as yellow pills
+          matches.addAll(partialMatches);
+        } else {
+          // No match found for this term
+          matches.add(TextMatch(
+            text: term,
+            matchType: MatchType.none,
+            matchedPart: null,
+            confidence: 0.0,
+          ));
+        }
       }
     }
 
@@ -114,6 +122,95 @@ class TextMatchService {
     }
 
     return matches;
+  }
+
+  /// Find partial matches against itemname field (contains, starts with, etc.)
+  List<TextMatch> _findPartialMatches(
+      String searchTerm, List<Map<String, dynamic>> partsData) {
+    final matches = <TextMatch>[];
+    final searchTermUpper = searchTerm.toUpperCase();
+    final searchTermLength = searchTermUpper.length;
+
+    // Limit to first 10 partial matches to avoid too many results
+    int matchCount = 0;
+    const maxMatches = 10;
+
+    for (final part in partsData) {
+      if (matchCount >= maxMatches) break;
+
+      final itemname = part['itemname']?.toString().toUpperCase() ?? '';
+      if (itemname.isEmpty) continue;
+
+      double confidence = 0.0;
+      bool isMatch = false;
+
+      // Check if itemname contains the search term
+      if (itemname.contains(searchTermUpper)) {
+        // Calculate confidence based on how much of the search term matches
+        final matchRatio = searchTermLength / itemname.length;
+        confidence = (0.6 + (matchRatio * 0.3)).clamp(0.6, 0.9);
+        isMatch = true;
+      }
+      // Check if search term contains itemname (reverse match)
+      else if (searchTermUpper.contains(itemname) && itemname.length >= 3) {
+        final matchRatio = itemname.length / searchTermLength;
+        confidence = (0.6 + (matchRatio * 0.3)).clamp(0.6, 0.9);
+        isMatch = true;
+      }
+      // Check if itemname starts with search term
+      else if (itemname.startsWith(searchTermUpper) && searchTermLength >= 3) {
+        confidence = 0.75;
+        isMatch = true;
+      }
+      // Check if search term starts with itemname
+      else if (searchTermUpper.startsWith(itemname) && itemname.length >= 3) {
+        confidence = 0.75;
+        isMatch = true;
+      }
+
+      if (isMatch) {
+        matches.add(TextMatch(
+          text: searchTerm,
+          matchType: MatchType.partial,
+          matchedPart: itemname,
+          confidence: confidence,
+          partData: part, // Store full part data for reference
+        ));
+        matchCount++;
+      }
+    }
+
+    return matches;
+  }
+
+  /// Search parts by itemname for global search (returns matching parts)
+  Future<List<Map<String, dynamic>>> searchParts(String query) async {
+    await _loadPartsData();
+
+    if (_cachedPartsData == null || _cachedPartsData!.isEmpty) {
+      return [];
+    }
+
+    if (query.trim().isEmpty) {
+      return [];
+    }
+
+    final queryUpper = query.trim().toUpperCase();
+    final results = <Map<String, dynamic>>[];
+    const maxResults = 20; // Limit results for dropdown
+
+    for (final part in _cachedPartsData!) {
+      if (results.length >= maxResults) break;
+
+      final itemname = part['itemname']?.toString().toUpperCase() ?? '';
+      
+      // Check for exact match or contains match
+      if (itemname.contains(queryUpper) || queryUpper.contains(itemname)) {
+        results.add(part);
+      }
+    }
+
+    return results;
   }
 
   // ============================================================================

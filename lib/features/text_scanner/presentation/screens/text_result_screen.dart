@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/recognized_text.dart';
 import '../../domain/entities/text_match.dart';
@@ -13,7 +12,6 @@ import '../../../../core/utils/price_formatter.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../home/domain/entities/part.dart';
 import '../../../home/data/models/part_model.dart';
-import '../../../cart/data/services/cart_service.dart';
 import '../bloc/text_scanner_bloc.dart';
 import '../bloc/text_scanner_event.dart';
 import '../bloc/text_scanner_state.dart';
@@ -119,7 +117,8 @@ class _TextResultScreenState extends State<TextResultScreen> {
   }
 
   Widget _buildMatchPill(BuildContext context, TextMatch match, Color color) {
-    final isClickable = match.matchType != MatchType.none;
+    // Only exact matches (green pills) are clickable, partial matches (yellow) are not
+    final isClickable = match.matchType == MatchType.exact;
 
     return GestureDetector(
       onTap: isClickable ? () => _navigateToSearch(match) : null,
@@ -224,189 +223,188 @@ class _TextResultScreenState extends State<TextResultScreen> {
           context.go(AppRouter.home);
         },
         child: Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Scanned Parts',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Theme.of(context).primaryColor,
-          foregroundColor: Colors.white,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () {
-              // Navigate directly to Home page
-              context.go(AppRouter.home);
-            },
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.copy),
-              onPressed: () => _copyToClipboard(context),
-              tooltip: 'Copy Text',
+          appBar: AppBar(
+            title: const Text(
+              'Scanned Parts',
+              style: TextStyle(color: Colors.white),
             ),
-            IconButton(
-              icon: const Icon(Icons.share),
-              onPressed: () => _shareText(context),
-              tooltip: 'Share Text',
+            backgroundColor: Theme.of(context).primaryColor,
+            foregroundColor: Colors.white,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () {
+                // Navigate directly to Home page
+                context.go(AppRouter.home);
+              },
             ),
-          ],
-        ),
-        body: _isLoadingMatches
-            ? const Center(
-                child: CircularProgressIndicator(),
-              )
-            : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Image preview if available (reduced size)
-                    if (widget.recognizedText.imagePath != null)
-                Container(
-                  height: 120,
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.outline.withOpacity(0.3),
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      'assets/logos/truckparts_logo.png', // Placeholder
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Theme.of(context).colorScheme.surface,
-                          child: Icon(
-                            Icons.image,
-                            size: 48,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withOpacity(0.5),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-
-              // Match Pills Section with Categorized Organization
-              if (_matches.isNotEmpty) ...[
-                Text(
-                  'Detected Parts',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Parts Found Section (Exact Matches)
-                if (_getMatchesByType(MatchType.exact).isNotEmpty) ...[
-                  _buildMatchSection(
-                    context,
-                    'Parts Found',
-                    _getMatchesByType(MatchType.exact),
-                    Icons.check_circle,
-                    const Color(0xFF10B981), // Green
-                    'Tap to view this part',
-                  ),
-                  const SizedBox(height: 20),
-                ],
-
-                // Possible Matches Section (Partial Matches)
-                if (_getMatchesByType(MatchType.partial).isNotEmpty) ...[
-                  _buildMatchSection(
-                    context,
-                    'Possible Matches',
-                    _getMatchesByType(MatchType.partial),
-                    Icons.warning_amber,
-                    const Color(0xFFFACC15), // Orange
-                    'Tap to search for this part',
-                  ),
-                  const SizedBox(height: 20),
-                ],
-
-                // Not Recognized Section (No Matches)
-                if (_getMatchesByType(MatchType.none).isNotEmpty) ...[
-                  _buildMatchSection(
-                    context,
-                    'Not Recognized',
-                    _getMatchesByType(MatchType.none),
-                    Icons.cancel,
-                    const Color(0xFFEF4444), // Red
-                    'Not in database',
-                  ),
-                  const SizedBox(height: 20),
-                ],
-              ],
-
-              // Scanned Text Display with Intelligence
-              _buildIntelligentScannedTextSection(context),
-
-              // Add bottom padding for buttons
-              const SizedBox(height: 100),
-            ],
-          ),
-        ),
-        // Bottom Navigation Buttons
-        bottomNavigationBar: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, -2),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.copy),
+                onPressed: () => _copyToClipboard(context),
+                tooltip: 'Copy Text',
+              ),
+              IconButton(
+                icon: const Icon(Icons.share),
+                onPressed: () => _shareText(context),
+                tooltip: 'Share Text',
               ),
             ],
           ),
-          child: SafeArea(
-            child: Row(
-              children: [
-                // Back Button - Navigate directly to Home page
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      context.go(AppRouter.home);
-                    },
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text('Back'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
+          body: _isLoadingMatches
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Image preview if available (reduced size)
+                      if (widget.recognizedText.imagePath != null)
+                        Container(
+                          height: 120,
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outline.withOpacity(0.3),
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.asset(
+                              'assets/logos/truckparts_logo.png', // Placeholder
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Theme.of(context).colorScheme.surface,
+                                  child: Icon(
+                                    Icons.image,
+                                    size: 48,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.5),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+
+                      // Match Pills Section with Categorized Organization
+                      if (_matches.isNotEmpty) ...[
+                        Text(
+                          'Detected Parts',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Parts Found Section (Exact Matches)
+                        if (_getMatchesByType(MatchType.exact).isNotEmpty) ...[
+                          _buildMatchSection(
+                            context,
+                            'Parts Found',
+                            _getMatchesByType(MatchType.exact),
+                            Icons.check_circle,
+                            const Color(0xFF10B981), // Green
+                            'Tap to view this part',
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+
+                        // Possible Matches Section (Partial Matches)
+                        if (_getMatchesByType(
+                          MatchType.partial,
+                        ).isNotEmpty) ...[
+                          _buildMatchSection(
+                            context,
+                            'Possible Matches',
+                            _getMatchesByType(MatchType.partial),
+                            Icons.warning_amber,
+                            const Color(0xFFFACC15), // Orange
+                            'Tap to search for this part',
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+
+                        // Not Recognized Section (No Matches)
+                        if (_getMatchesByType(MatchType.none).isNotEmpty) ...[
+                          _buildMatchSection(
+                            context,
+                            'Not Recognized',
+                            _getMatchesByType(MatchType.none),
+                            Icons.cancel,
+                            const Color(0xFFEF4444), // Red
+                            'Not in database',
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ],
+
+                      // Scanned Text Display with Intelligence
+                      _buildIntelligentScannedTextSection(context),
+
+                      // Add bottom padding for buttons
+                      const SizedBox(height: 100),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                // Re-Scan Button
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _rescan(context),
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('Re-Scan'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
+          // Bottom Navigation Buttons
+          bottomNavigationBar: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, -2),
                 ),
               ],
             ),
+            child: SafeArea(
+              child: Row(
+                children: [
+                  // Back Button - Navigate directly to Home page
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        context.go(AppRouter.home);
+                      },
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text('Back'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Re-Scan Button
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _rescan(context),
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text('Re-Scan'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -446,12 +444,10 @@ class _TextResultScreenState extends State<TextResultScreen> {
 
   Widget _buildIntelligentScannedTextSection(BuildContext context) {
     final organizedText = _organizeScannedText();
-    
+
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
@@ -482,9 +478,9 @@ class _TextResultScreenState extends State<TextResultScreen> {
                   Text(
                     'Scanned Text',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).primaryColor,
-                        ),
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).primaryColor,
+                    ),
                   ),
                 ],
               ),
@@ -498,11 +494,11 @@ class _TextResultScreenState extends State<TextResultScreen> {
                     ? SelectableText(
                         widget.recognizedText.text,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              fontSize: 16,
-                              height: 1.6,
-                              fontWeight: FontWeight.w400,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
+                          fontSize: 16,
+                          height: 1.6,
+                          fontWeight: FontWeight.w400,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       )
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -540,7 +536,9 @@ class _TextResultScreenState extends State<TextResultScreen> {
     // Group partial matches by similarity
     final partialGroups = <String, List<TextMatch>>{};
     for (final match in partialMatches) {
-      final firstChar = match.text.isNotEmpty ? match.text[0].toUpperCase() : 'Other';
+      final firstChar = match.text.isNotEmpty
+          ? match.text[0].toUpperCase()
+          : 'Other';
       partialGroups.putIfAbsent(firstChar, () => []).add(match);
     }
 
@@ -550,9 +548,11 @@ class _TextResultScreenState extends State<TextResultScreen> {
         _buildTextSection(
           context,
           'Identified Parts',
-          exactGroups.entries.map((entry) {
-            return entry.value.map((m) => m.text).join(', ');
-          }).join('\n'),
+          exactGroups.entries
+              .map((entry) {
+                return entry.value.map((m) => m.text).join(', ');
+              })
+              .join('\n'),
           Icons.check_circle,
           const Color(0xFF10B981),
         ),
@@ -564,9 +564,11 @@ class _TextResultScreenState extends State<TextResultScreen> {
         _buildTextSection(
           context,
           'Possible Parts',
-          partialGroups.entries.map((entry) {
-            return entry.value.map((m) => m.text).join(', ');
-          }).join('\n'),
+          partialGroups.entries
+              .map((entry) {
+                return entry.value.map((m) => m.text).join(', ');
+              })
+              .join('\n'),
           Icons.warning_amber,
           const Color(0xFFFACC15),
         ),
@@ -589,7 +591,9 @@ class _TextResultScreenState extends State<TextResultScreen> {
     final matchedTexts = _matches.map((m) => m.text.toUpperCase()).toSet();
     final allText = widget.recognizedText.text
         .split(RegExp(r'[\s,\n\r\t;|]+'))
-        .where((t) => t.trim().isNotEmpty && !matchedTexts.contains(t.toUpperCase()))
+        .where(
+          (t) => t.trim().isNotEmpty && !matchedTexts.contains(t.toUpperCase()),
+        )
         .join(' ');
 
     if (allText.trim().isNotEmpty) {
@@ -616,7 +620,7 @@ class _TextResultScreenState extends State<TextResultScreen> {
   ) {
     // Split content into readable chunks (by lines, commas, or spaces)
     final textChunks = _formatTextIntoReadableSections(content);
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -629,9 +633,9 @@ class _TextResultScreenState extends State<TextResultScreen> {
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
               ),
             ],
           ),
@@ -665,7 +669,8 @@ class _TextResultScreenState extends State<TextResultScreen> {
                       Expanded(
                         child: SelectableText(
                           chunk.trim(),
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
                                 fontSize: 14,
                                 height: 1.6,
                                 color: Theme.of(context).colorScheme.onSurface,
@@ -685,32 +690,41 @@ class _TextResultScreenState extends State<TextResultScreen> {
 
   List<String> _formatTextIntoReadableSections(String text) {
     if (text.trim().isEmpty) return [];
-    
+
     // Split by newlines first
-    final lines = text.split('\n').where((line) => line.trim().isNotEmpty).toList();
+    final lines = text
+        .split('\n')
+        .where((line) => line.trim().isNotEmpty)
+        .toList();
     if (lines.length > 1) {
       return lines;
     }
-    
+
     // If no newlines, split by commas
-    final commaSplit = text.split(',').where((part) => part.trim().isNotEmpty).toList();
+    final commaSplit = text
+        .split(',')
+        .where((part) => part.trim().isNotEmpty)
+        .toList();
     if (commaSplit.length > 1) {
       return commaSplit;
     }
-    
+
     // If single long text, split by spaces into chunks of reasonable length
-    final words = text.split(' ').where((word) => word.trim().isNotEmpty).toList();
+    final words = text
+        .split(' ')
+        .where((word) => word.trim().isNotEmpty)
+        .toList();
     if (words.length <= 5) {
       return [text];
     }
-    
+
     // Group words into chunks of 5-7 words
     final chunks = <String>[];
     for (int i = 0; i < words.length; i += 6) {
       final end = (i + 6 < words.length) ? i + 6 : words.length;
       chunks.add(words.sublist(i, end).join(' '));
     }
-    
+
     return chunks;
   }
 
@@ -751,13 +765,12 @@ class _TextResultScreenState extends State<TextResultScreen> {
         context: context,
         builder: (context) => _ItemDetailsDialog(
           part: part,
-          onAddToCart: (part, quantity) async {
-            final cartService = Provider.of<CartService>(context, listen: false);
-            await cartService.addToCart(part, quantity);
+          onAddToCart: (part, quantity) {
+            // Only show message, no API functionality
             if (mounted) {
               SnackBarUtils.showSuccess(
                 context,
-                message: 'Added ${part.item} (Qty: $quantity) to cart',
+                message: 'Part: ${part.item} (Qty: $quantity) added to cart',
               );
             }
           },
@@ -797,10 +810,7 @@ class _ItemDetailsDialog extends StatefulWidget {
   final Part part;
   final Function(Part, int) onAddToCart;
 
-  const _ItemDetailsDialog({
-    required this.part,
-    required this.onAddToCart,
-  });
+  const _ItemDetailsDialog({required this.part, required this.onAddToCart});
 
   @override
   State<_ItemDetailsDialog> createState() => _ItemDetailsDialogState();
@@ -1012,7 +1022,7 @@ class _ItemDetailsDialogState extends State<_ItemDetailsDialog> {
                                         decoration: BoxDecoration(
                                           color: _quantity > 1
                                               ? AppTheme.primaryColor
-                                                  .withOpacity(0.05)
+                                                    .withOpacity(0.05)
                                               : Colors.grey.withOpacity(0.05),
                                           borderRadius: const BorderRadius.only(
                                             topLeft: Radius.circular(7),
@@ -1065,14 +1075,14 @@ class _ItemDetailsDialogState extends State<_ItemDetailsDialog> {
                                             parsedQuantity <= 999) {
                                           _updateQuantity(parsedQuantity);
                                         } else {
-                                          _quantityController.text =
-                                              _quantity.toString();
+                                          _quantityController.text = _quantity
+                                              .toString();
                                         }
                                         _focusNode.unfocus();
                                       },
                                       onTap: () {
-                                        _quantityController.selection =
-                                            TextSelection(
+                                        _quantityController
+                                            .selection = TextSelection(
                                           baseOffset: 0,
                                           extentOffset:
                                               _quantityController.text.length,

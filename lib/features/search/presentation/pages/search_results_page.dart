@@ -385,9 +385,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
               // Show the pill that triggered this search if it's from text scanner
               if (_isFromTextScanner()) _buildTextScannerPill(),
               // Show other active filters
-              ..._activeFilters
-                  .map((filter) => _buildFilterChip(filter))
-                  ,
+              ..._activeFilters.map((filter) => _buildFilterChip(filter)),
             ],
           ),
         ],
