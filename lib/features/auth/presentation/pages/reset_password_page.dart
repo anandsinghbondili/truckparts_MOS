@@ -40,8 +40,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         ),
       );
 
-      // Navigate to login page
-      context.go(AppRouter.login);
+      // DISABLED: Login disabled, navigate to home instead
+      context.go(AppRouter.home);
     }
   }
 

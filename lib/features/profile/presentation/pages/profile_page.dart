@@ -564,7 +564,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ElevatedButton(
             onPressed: () {
               context.pop();
-              context.go(AppRouter.login);
+              context.go(AppRouter.home); // DISABLED: Login disabled, go to home
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.errorColor,

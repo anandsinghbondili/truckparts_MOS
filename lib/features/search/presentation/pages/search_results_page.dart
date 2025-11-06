@@ -387,7 +387,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
               // Show other active filters
               ..._activeFilters
                   .map((filter) => _buildFilterChip(filter))
-                  .toList(),
+                  ,
             ],
           ),
         ],

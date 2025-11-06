@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+// DISABLED: Login pages hidden from app
 // import '../../features/auth/presentation/pages/login_page.dart'; // COMMENTED OUT - ORIGINAL IMPLEMENTATION
-import '../../features/auth/presentation/pages/emp_login_page.dart';
+// import '../../features/auth/presentation/pages/emp_login_page.dart'; // DISABLED - Login disabled
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/auth/presentation/pages/otp_verification_page.dart';
-import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/search/presentation/pages/search_results_page.dart';
 import '../../features/cart/presentation/pages/cart_page.dart';
 import '../../features/cart/presentation/pages/otp_confirmation_page.dart';
@@ -54,19 +54,18 @@ class AppRouter {
         builder: (context, state) => const SplashScreen(),
       ),
 
-      // Auth Routes - COMMENTED OUT ORIGINAL LOGIN PAGE
+      // Auth Routes - DISABLED: Login page hidden from app
+      // TODO: Re-enable login routes when authentication is needed
       // GoRoute(
       //   path: login,
       //   name: 'login',
       //   builder: (context, state) => const LoginPage(),
       // ),
-
-      // NEW Employee Login Page
-      GoRoute(
-        path: login,
-        name: 'login',
-        builder: (context, state) => const EmpLoginPage(),
-      ),
+      // GoRoute(
+      //   path: login,
+      //   name: 'login',
+      //   builder: (context, state) => const EmpLoginPage(),
+      // ),
       GoRoute(
         path: forgotPassword,
         name: 'forgot-password',

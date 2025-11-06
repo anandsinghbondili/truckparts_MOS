@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/auth/presentation/bloc/auth_bloc.dart';
-import '../../features/auth/presentation/bloc/auth_event.dart';
-import '../../features/auth/presentation/bloc/auth_state.dart';
 import '../router/app_router.dart';
 import '../theme/app_theme.dart';
 
@@ -54,9 +50,13 @@ class _SplashScreenState extends State<SplashScreen>
   void _checkAuthStatus() {
     Future.delayed(const Duration(milliseconds: 3000), () {
       if (mounted) {
-        // Check if user is already authenticated
-        final authBloc = context.read<AuthBloc>();
-        authBloc.add(CheckAuthStatus());
+        // DISABLED: Authentication disabled - go directly to home screen
+        // TODO: Re-enable authentication when needed
+        // final authBloc = context.read<AuthBloc>();
+        // authBloc.add(CheckAuthStatus());
+        
+        // Go directly to home screen (text scanner)
+        context.go(AppRouter.home);
       }
     });
   }
@@ -78,15 +78,7 @@ class _SplashScreenState extends State<SplashScreen>
     final spacingBetweenElements = 32.0;
     final bottomSpacing = 60.0;
 
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is Authenticated) {
-          context.go(AppRouter.home);
-        } else if (state is Unauthenticated) {
-          context.go(AppRouter.login);
-        }
-      },
-      child: Scaffold(
+    return Scaffold(
         backgroundColor: AppTheme.primaryColor,
         body: SafeArea(
           child: Center(
@@ -219,7 +211,6 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }

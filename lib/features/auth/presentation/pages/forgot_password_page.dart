@@ -55,7 +55,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            NavigationUtils.safePop(context, fallbackRoute: AppRouter.login);
+            NavigationUtils.safePop(context, fallbackRoute: AppRouter.home); // DISABLED: Login disabled, go to home
           },
         ),
         title: Row(
@@ -205,7 +205,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 // Back to Login
                 Center(
                   child: TextButton(
-                    onPressed: () => context.go(AppRouter.login),
+                    onPressed: () => context.go(AppRouter.home), // DISABLED: Login disabled, go to home
                     child: Text(
                       'Back to Login',
                       style: TextStyle(

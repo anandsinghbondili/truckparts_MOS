@@ -82,101 +82,103 @@ class _HomeDrawerState extends State<HomeDrawer> {
               context.go(AppRouter.home);
             },
           ),
-          const Divider(height: 1, indent: 16, endIndent: 16),
-          ListTile(
-            leading: const Icon(
-              Icons.inventory_2_outlined,
-              color: AppTheme.primaryColor,
-            ),
-            title: const Text('All Parts'),
-            onTap: () {
-              Navigator.pop(context);
-              context.push(AppRouter.items);
-            },
-          ),
-          const Divider(height: 1, indent: 16, endIndent: 16),
-          ListTile(
-            leading: const Icon(
-              Icons.shopping_cart_outlined,
-              color: AppTheme.primaryColor,
-            ),
-            title: const Text('Cart'),
-            onTap: () {
-              Navigator.pop(context);
-              context.go(AppRouter.cart);
-            },
-          ),
-          const Divider(height: 1, indent: 16, endIndent: 16),
-          ListTile(
-            leading: const Icon(
-              Icons.receipt_long_outlined,
-              color: AppTheme.primaryColor,
-            ),
-            title: const Text('My Orders'),
-            onTap: () {
-              Navigator.pop(context);
-              context.go(AppRouter.orders);
-            },
-          ),
-          const Divider(height: 1, indent: 16, endIndent: 16),
-          ListTile(
-            leading: const Icon(
-              Icons.account_balance_outlined,
-              color: AppTheme.primaryColor,
-            ),
-            title: const Text('Account Summary'),
-            onTap: () {
-              Navigator.pop(context);
-              // Navigate to account summary (placeholder for now)
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Account Summary - Coming Soon'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-          ),
-          const Divider(height: 1, indent: 16, endIndent: 16),
-          ListTile(
-            leading: const Icon(
-              Icons.person_outlined,
-              color: AppTheme.primaryColor,
-            ),
-            title: const Text('My Profile'),
-            onTap: () {
-              Navigator.pop(context);
-              context.go(AppRouter.profile);
-            },
-          ),
-          const Divider(height: 1, indent: 16, endIndent: 16),
-          ListTile(
-            leading: const Icon(
-              Icons.contact_support_outlined,
-              color: AppTheme.primaryColor,
-            ),
-            title: const Text('Contact Us'),
-            onTap: () {
-              Navigator.pop(context);
-              context.push(AppRouter.contactUs);
-            },
-          ),
-          const Divider(height: 16, thickness: 2, indent: 16, endIndent: 16),
-          const SizedBox(height: 8),
-          ListTile(
-            leading: const Icon(
-              Icons.logout_outlined,
-              color: AppTheme.errorColor,
-            ),
-            title: const Text(
-              'Logout',
-              style: TextStyle(color: AppTheme.errorColor),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              widget.onLogoutPressed();
-            },
-          ),
-          const Divider(height: 1, indent: 16, endIndent: 16),
+          // DISABLED: All other menu options hidden - only Home is visible
+          // TODO: Re-enable menu options when needed
+          // const Divider(height: 1, indent: 16, endIndent: 16),
+          // ListTile(
+          //   leading: const Icon(
+          //     Icons.inventory_2_outlined,
+          //     color: AppTheme.primaryColor,
+          //   ),
+          //   title: const Text('All Parts'),
+          //   onTap: () {
+          //     Navigator.pop(context);
+          //     context.push(AppRouter.items);
+          //   },
+          // ),
+          // const Divider(height: 1, indent: 16, endIndent: 16),
+          // ListTile(
+          //   leading: const Icon(
+          //     Icons.shopping_cart_outlined,
+          //     color: AppTheme.primaryColor,
+          //   ),
+          //   title: const Text('Cart'),
+          //   onTap: () {
+          //     Navigator.pop(context);
+          //     context.go(AppRouter.cart);
+          //   },
+          // ),
+          // const Divider(height: 1, indent: 16, endIndent: 16),
+          // ListTile(
+          //   leading: const Icon(
+          //     Icons.receipt_long_outlined,
+          //     color: AppTheme.primaryColor,
+          //   ),
+          //   title: const Text('My Orders'),
+          //   onTap: () {
+          //     Navigator.pop(context);
+          //     context.go(AppRouter.orders);
+          //   },
+          // ),
+          // const Divider(height: 1, indent: 16, endIndent: 16),
+          // ListTile(
+          //   leading: const Icon(
+          //     Icons.account_balance_outlined,
+          //     color: AppTheme.primaryColor,
+          //   ),
+          //   title: const Text('Account Summary'),
+          //   onTap: () {
+          //     Navigator.pop(context);
+          //     // Navigate to account summary (placeholder for now)
+          //     ScaffoldMessenger.of(context).showSnackBar(
+          //       const SnackBar(
+          //         content: Text('Account Summary - Coming Soon'),
+          //         duration: Duration(seconds: 2),
+          //       ),
+          //     );
+          //   },
+          // ),
+          // const Divider(height: 1, indent: 16, endIndent: 16),
+          // ListTile(
+          //   leading: const Icon(
+          //     Icons.person_outlined,
+          //     color: AppTheme.primaryColor,
+          //   ),
+          //   title: const Text('My Profile'),
+          //   onTap: () {
+          //     Navigator.pop(context);
+          //     context.go(AppRouter.profile);
+          //   },
+          // ),
+          // const Divider(height: 1, indent: 16, endIndent: 16),
+          // ListTile(
+          //   leading: const Icon(
+          //     Icons.contact_support_outlined,
+          //     color: AppTheme.primaryColor,
+          //   ),
+          //   title: const Text('Contact Us'),
+          //   onTap: () {
+          //     Navigator.pop(context);
+          //     context.push(AppRouter.contactUs);
+          //   },
+          // ),
+          // const Divider(height: 16, thickness: 2, indent: 16, endIndent: 16),
+          // const SizedBox(height: 8),
+          // ListTile(
+          //   leading: const Icon(
+          //     Icons.logout_outlined,
+          //     color: AppTheme.errorColor,
+          //   ),
+          //   title: const Text(
+          //     'Logout',
+          //     style: TextStyle(color: AppTheme.errorColor),
+          //   ),
+          //   onTap: () {
+          //     Navigator.pop(context);
+          //     widget.onLogoutPressed();
+          //   },
+          // ),
+          // const Divider(height: 1, indent: 16, endIndent: 16),
           // App Version Display
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

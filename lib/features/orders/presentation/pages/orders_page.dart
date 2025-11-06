@@ -280,9 +280,9 @@ class _OrdersPageState extends State<OrdersPage> {
             const SizedBox(height: 24),
             if (isLoginError)
               ElevatedButton.icon(
-                onPressed: () => context.go(AppRouter.login),
-                icon: const Icon(Icons.login),
-                label: const Text('Go to Login'),
+                onPressed: () => context.go(AppRouter.home), // DISABLED: Login disabled, go to home
+                icon: const Icon(Icons.home),
+                label: const Text('Go to Home'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor,
                   foregroundColor: Colors.white,

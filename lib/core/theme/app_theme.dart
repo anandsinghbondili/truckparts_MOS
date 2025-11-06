@@ -57,12 +57,10 @@ class AppTheme {
       secondary: secondaryColor,
       secondaryContainer: accentLight,
       error: errorColor,
-      background: lightBackgroundColor,
       surface: lightSurfaceColor,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
       onError: Colors.white,
-      onBackground: lightTextPrimary,
       onSurface: lightTextPrimary,
     ),
     textTheme: GoogleFonts.interTextTheme().copyWith(

@@ -17,12 +17,13 @@ class NavigationUtils {
     }
   }
 
-  /// Navigates back to the previous page, with fallback to login if not authenticated
+  /// Navigates back to the previous page, with fallback to home
+  /// DISABLED: Login disabled, fallback to home instead
   static void safePopWithAuthFallback(BuildContext context) {
     if (context.canPop()) {
       context.pop();
     } else {
-      context.go(AppRouter.login);
+      context.go(AppRouter.home); // DISABLED: Login disabled, go to home
     }
   }
 }

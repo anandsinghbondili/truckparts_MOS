@@ -33,23 +33,25 @@ class TextScannerHomeScreen extends StatelessWidget {
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: IconButton(
-              onPressed: () => _refreshParts(context),
-              icon: const Icon(Icons.refresh, size: 24),
-              tooltip: 'Refresh Parts Database',
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.2),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
-        ],
+        // DISABLED: Refresh button hidden from header
+        // TODO: Re-enable refresh button when needed
+        // actions: [
+        //   Padding(
+        //     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        //     child: IconButton(
+        //       onPressed: () => _refreshParts(context),
+        //       icon: const Icon(Icons.refresh, size: 24),
+        //       tooltip: 'Refresh Parts Database',
+        //       style: IconButton.styleFrom(
+        //         backgroundColor: Colors.white.withOpacity(0.2),
+        //         foregroundColor: Colors.white,
+        //         shape: RoundedRectangleBorder(
+        //           borderRadius: BorderRadius.circular(8),
+        //         ),
+        //       ),
+        //     ),
+        //   ),
+        // ],
       ),
       drawer: HomeDrawer(onLogoutPressed: () => _showLogoutDialog(context)),
       body: BlocConsumer<TextScannerBloc, TextScannerState>(
@@ -106,8 +108,10 @@ class TextScannerHomeScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.of(dialogContext).pop();
-              // Navigate to login page
-              context.go(AppRouter.login);
+              // DISABLED: Login disabled, go to home
+              // TODO: Re-enable login redirect when authentication is needed
+              // context.go(AppRouter.login);
+              context.go(AppRouter.home);
             },
             child: const Text('Logout'),
           ),
@@ -116,6 +120,9 @@ class TextScannerHomeScreen extends StatelessWidget {
     );
   }
 
+  // DISABLED: Refresh button hidden, method preserved for future use
+  // TODO: Re-enable when refresh button is needed
+  // ignore: unused_element
   Future<void> _refreshParts(BuildContext context) async {
     try {
       // Show loading indicator

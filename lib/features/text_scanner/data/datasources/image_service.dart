@@ -7,9 +7,7 @@ class ImageService {
   List<CameraDescription>? _cameras;
 
   Future<List<CameraDescription>> getCameras() async {
-    if (_cameras == null) {
-      _cameras = await availableCameras();
-    }
+    _cameras ??= await availableCameras();
     return _cameras!;
   }
 

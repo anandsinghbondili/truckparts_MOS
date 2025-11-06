@@ -651,9 +651,9 @@ class _HomePageState extends State<HomePage> {
       Navigator.of(context).pop();
     }
 
-    // Navigate to login page
+    // DISABLED: Login disabled, navigate to home instead
     if (context.mounted) {
-      context.go(AppRouter.login);
+      context.go(AppRouter.home);
     }
   }
 }
